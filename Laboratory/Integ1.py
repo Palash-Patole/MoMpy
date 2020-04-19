@@ -9,11 +9,15 @@ Version: Base
 
 Description:
     1. Integ-1 assignment to solve problem of motion of car using numerical integrators
-    2. 
+    2. Function to solve the problem analytically
+    3. Function to solve the problem using the Euler's integrator
+    4. Function to solve the problem using the RK4 integrator
 
 """
 
 import numpy as npMain
+
+import matplotlib.pyplot as plt 
 
 def Analytical(step,t0,te,X0,V0,a):
     # importing the required modules
@@ -93,7 +97,7 @@ def RK4(step,t0,te,S0,a):
     
 
 # Parameters definition
-step = 4  # [s]
+step = 1  # [s]
 t0 = 0
 te= 60
 X0 = 0 # [m]
@@ -101,14 +105,61 @@ V0 = 0 # [m/s]
 S0 = npMain.array([X0,V0]) # intial state
 a = 2 # [m/s^2]
 
+plotResults = 2 # 0 - no plotting
+                # 1 - Only computed distance plot for the the Euler integrator  
+                # 2 - Double y-axis plot for the Euler integrator
+
 # Solving the problem using equations of motion - analytical way
-#AnaSol = Analytical(step,t0,te,X0,V0,a)
+AnaSol = Analytical(step,t0,te,X0,V0,a) # results validated
 
 # Solving the problem using Euler integrator
 step = 0.1
-EulerSol = Euler(step,t0,te,S0,a)
+EulerSol = Euler(step,t0,te,S0,a) # results validated at multiple step-sizes
+
 
 # Solving the problem using RK4 integrator
-step = 0.1
-RK4Sol = RK4(step,t0,te,S0,a)
+step = 0.001
+RK4Sol = RK4(step,t0,te,S0,a) # results validated at multiple step-sizes
+print('Results obtained with the RK4 integrator:')
+print('Distance traveled by the car at te = ',RK4Sol[-1,0],' s is',RK4Sol[-1,1])
+print('Velocity of the car at te = ',RK4Sol[-1,0],' s is',RK4Sol[-1,2])
+
+############# Plotting
+if plotResults == 1:
+    # Plotting Euler solution results - only distance
+    plt.plot(EulerSol[:,0],EulerSol[:,1])
+    plt.title('Results obtained with the Euler integrator')
+    plt.xlabel('Time [s]')
+    plt.ylabel('Distance covered by the car [m]')
+
+elif plotResults == 2:
+    # Ploting Euler solution results -  Distance and velocity
+    fig, ax1 = plt.subplots()
+    
+    color = 'tab:red'
+    ax1.set_xlabel('Time [s]')
+    ax1.set_ylabel('Distance [m]', color=color)
+    ax1.plot(EulerSol[:,0], EulerSol[:,1], color=color)
+    ax1.set_ylim(bottom=0)
+    ax1.tick_params(axis='y', labelcolor=color)
+    
+    
+    
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    
+    color = 'tab:blue'
+    ax2.set_ylabel('Velocity [m/s]', color=color)  # we already handled the x-label with ax1
+    ax2.plot(EulerSol[:,0], EulerSol[:,2], color=color)
+    ax2.set_ylim(bottom=0)
+    ax2.tick_params(axis='y', labelcolor=color)
+    
+    
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.title('Solutions obtained with the Euler integrator')
+    plt.xlim(0,60)
+    plt.grid(True)
+    plt.show()
+    
+else:
+    print('No plotting is requested.')
 
