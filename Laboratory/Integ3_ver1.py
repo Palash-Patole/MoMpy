@@ -10,8 +10,11 @@ Version: v1 (Base: Integ1 excercise)
 Description:
         1. Integ-3 assignment to solve problem of propagation S/C state under point mass gravity
         2. Analytical calculation function from the base is dropped
-        3. Functions for Euler integrator edited to call the derivative function
+        3. Function for the Euler integrator edited to call the derivative function
         4. State derivative function, for point mass gravity of Earth is defined
+        5. Function for the RK4 integrator edited to call the derivative function
+        6. Orbit visualizations for results obtained with both integrators
+        7. Output validation - TBD
 """
 ###########################################
 #### Importing the required modules  ######   
