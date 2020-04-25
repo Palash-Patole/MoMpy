@@ -43,7 +43,7 @@ if TestCase == 1:
     
     spice.furnsh("./External_files/Spice_kernels/kernel_load.txt")
     
-    muE = spice.bodvrd( 'EARTH', 'GM', 1 );
+    muE = spice.bodvrd( 'EARTH', 'GM', 1 )
     
     #mu = 398600.441E9 # Gravitational parameter for Earth [m^3/s^2]
     mu = muE[1][0] * 1e9
