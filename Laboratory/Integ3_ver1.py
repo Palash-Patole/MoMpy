@@ -14,7 +14,8 @@ Description:
         4. State derivative function, for point mass gravity of Earth is defined
         5. Function for the RK4 integrator edited to call the derivative function
         6. Orbit visualizations for results obtained with both integrators
-        7. Output validation - TBD
+        7. Output validation complete through qualityCheck matrix - integrators validated at different step sizes
+        8. Output validation is also performed through visual comparision of accuracy vs number of function evaluations plot
 """
 ###########################################
 #### Importing the required modules  ######   
@@ -146,15 +147,21 @@ def pointMassGravity(S):
 #####################################
 
 # Parameters definition
-step = 10  # [s]
+step = 1000  # [s]
 t0 = 0
 te= 30 * 86400 # [one month = 30 * sidereal day in seconds]
+a = 42164173 # Semi-major axis for a GEO S/C [m]
 
-KeplerC = npMain.array([42164173,0,0,0,0,0]) # initial state of GEO satellite, Kepler elements
+KeplerC = npMain.array([a,0,0,0,0,0]) # initial state of GEO satellite, Kepler elements
 
-visualize = 2 # 0 - no visualizations
+visualize = 0 # 0 - no visualizations
               # 1 - plot the S/C orbit over a month, XY plane, Euler integrator
               # 2 - plot the S/C orbit over a month, XY plane, RK4 integrator
+
+tradeOff = 3 # 0 - No trade-off
+             # 1 - Checking quality of results with the Euler integrator
+             # 2-  Checking quality of results with the RK4 integrator
+             # 3 - Plotting accuracy vs number of function evals plot
            
 ######################################
 ######## Computations ################
@@ -169,12 +176,14 @@ spice.kclear
 # Converting from initial state in KE to equivalent cartesian coordinates
 S0 = convertKeplerToCartesian(KeplerC,mu,3) # initial state in cartesian coordinates
 
-# Solving the problem using Euler integrator
-EulerSol = Euler(step,t0,te,S0) 
+if tradeOff == 0:
+    # Solving the problem using Euler integrator
+    EulerSol = Euler(step,t0,te,S0) 
 
-# Solving the problem using RK4 integrator
-RK4Sol = RK4(step,t0,te,S0) # results validated at multiple step-sizes
-
+    # Solving the problem using RK4 integrator
+    RK4Sol = RK4(step,t0,te,S0) # results validated at multiple step-sizes
+else:
+    visualize = 0
 ######################################
 ######## Visualization ###############
 ######################################
@@ -198,3 +207,81 @@ elif visualize ==2:
 else:
     print('Unrecognized input for the visualization option.')
 
+######################################
+### Qualti-check / trade -off  #######
+######################################
+
+if tradeOff == 0:
+    print('No quality-check/trade-off is requested by the user.')
+elif tradeOff == 1 or tradeOff == 2:
+    # Setting values to be used
+    referenceA = KeplerC[0]
+    referenceE = KeplerC[1]
+    steps = npMain.array([1000,100,10,1,0.1])
+    
+    #Storage variable
+    qualityCheck = npMain.zeros(7*steps.size)
+    qualityCheck.shape = [steps.size,7]
+    qualityCheck[:,1] = referenceA
+    qualityCheck[:,4] = referenceE
+    
+    # Quality check through iterations
+    for row in range(steps.size):
+        # Extracting the step size and solving using the desired integrator
+        step = steps[row]
+        qualityCheck[row,0] = step
+        if tradeOff == 1:
+            Sol = Euler(step,t0,te,S0) 
+        else:
+            Sol = RK4(step,t0,te,S0)
+            
+        # Extracting the final state and converting it into the equivalent cartesian coordinates
+        FinalS = Sol[-1,:]
+        FinalS_carte = convertCartesianToKepler(FinalS[1:7],mu)
+        
+        # Quality-check
+        qualityCheck[row,2] = FinalS_carte[0]
+        qualityCheck[row,3] = (qualityCheck[row,2]-qualityCheck[row,1])*100/qualityCheck[row,1] # % error in semi-major axis
+        qualityCheck[row,5] = FinalS_carte[1]
+        qualityCheck[row,6] = (qualityCheck[row,5]-qualityCheck[row,4]) # absolute error in eccentricity
+        print('Quality-check complete at step size of ',step, ' s.')
+    
+elif tradeOff == 3:
+    # Setting values to be used
+    steps = npMain.array([1000,100,10,1,0.1])
+    referenceR = KeplerC[0]
+    
+    # Storage variable
+    R_tradeOff = npMain.zeros(4*steps.size)
+    R_tradeOff.shape = [steps.size,4]
+    
+    for row in range(steps.size):
+        R_tradeOff[row,0] = steps[row] # Extracting the step size
+        R_tradeOff[row,1] = (te-t0)/R_tradeOff[row,0] # Computing number of function evaluations
+    
+        # Computing solution at various step sizes with both integrators
+        Sol1 = Euler(R_tradeOff[row,0],t0,te,S0)
+        Sol2 = RK4(R_tradeOff[row,0],t0,te,S0)
+        
+        # Computing % error in the computed distance, after te
+        FinalS1 = Sol1[-1,:]
+        R_tradeOff[row,2] = (npMain.linalg.norm(FinalS1[0:3]) - referenceR)*100/referenceR
+        FinalS2 = Sol2[-1,:]
+        R_tradeOff[row,3] = (npMain.linalg.norm(FinalS2[0:3]) - referenceR)*100/referenceR
+        
+        print('Trade-off analysis: computatios are complete at step size of ',steps[row], ' s.')
+        
+    # Visualizating the obtained results
+    fig = plt.subplot
+    plt.loglog(R_tradeOff[:,1],R_tradeOff[:,2],'*--',label = 'Euler integrator')
+    plt.loglog(R_tradeOff[:,1],R_tradeOff[:,3],'+--',label = 'RK4 integrator')
+    plt.xlabel('Number of function evaluations')
+    plt.xticks(R_tradeOff[:,1],[str(int(R_tradeOff[0,1])),str(int(R_tradeOff[1,1])),str(int(R_tradeOff[2,1])),str(int(R_tradeOff[3,1])),str(int(R_tradeOff[4,1]))])
+    ylab = '% Error in the computed distance after te =' + str(te) + ' seconds'
+    plt.ylabel(ylab)
+    plt.title('Trade-off of step sizes and accuracy with the numerical integrators')
+    plt.grid(True)
+    plt.legend()
+    
+else:
+    print('Unrecognized input for the quality-check/trade-off option.')
