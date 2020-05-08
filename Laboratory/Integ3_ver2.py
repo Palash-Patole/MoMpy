@@ -49,7 +49,7 @@ class numericalIntegrator:
          
         # error handling
         assert(timeArray.size==3),"Incorrect size for the time array" 
-        assert(te>=t0),"Final epoch of integration is smaller than intial epoch."
+        assert(self.te>=self.t0),"Final epoch of integration is smaller than intial epoch."
         
         # importing modules for the class definition
         import numpy as npNIC
