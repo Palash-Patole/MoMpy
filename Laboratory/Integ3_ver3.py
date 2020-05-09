@@ -5,12 +5,12 @@ MoMpy Project: Laboratory
 
 Date of creation: Tue May  5 02:46:06 2020
 
-Version: 3 
+Version: 3 (parallely developed with Modules/Integrators.py and Modules/Propagators.py)
 
 Description:
         1. Definition of NI classes imported from the Integrators module
         2. EOM are imported using the Propagators modules and passed as the state derivative function
-        3. Output validation -TBD
+        3. Output validation - through step size variation part of the assignment - validated
 """
 ###########################################
 #### Importing the required modules  ######   
@@ -45,7 +45,7 @@ EOM = prop.pointMassGravity
 
 KeplerC = npMain.array([a,0,0,0,0,0]) # initial state of GEO satellite, Kepler elements
 
-tradeOff = 1 # 0 - No trade-off
+tradeOff = 2 # 0 - No trade-off
              # 1 - Checking quality of results with the Euler integrator
              # 2-  Checking quality of results with the RK4 integrator
 
@@ -116,8 +116,6 @@ elif tradeOff == 1 or tradeOff == 2:
         qualityCheck[row,5] = FinalS_carte[1]
         qualityCheck[row,6] = (qualityCheck[row,5]-qualityCheck[row,4]) # absolute error in eccentricity
         print('Quality-check complete at step size of ',step, ' s.')
-
-
 
 ######################################
 ######## Visualization ###############

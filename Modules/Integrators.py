@@ -8,7 +8,7 @@ Date of creation: Tue May  5 02:40:00 2020
 Version: developed with version 3 of the laboratory script, Integ3.py
 
 Description:
-        1. Definition of the base or superclass for numerical integrator
+        1. Definition of the base/superclass for numerical integrator
         2. Definition of the subclass - Euler integrator
         3. Definition of the subclass - RK4 integrator
 

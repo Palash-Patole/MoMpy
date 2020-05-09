@@ -8,6 +8,9 @@ version: Base
 
 Description:
     1. Generic canvas to test different modules
+    2. Tested - coordinate coversations
+    3. 3 options of computing the Earth-repeat orbit solutions
+    4. 
 """
 
 from Modules.BasicAstrodynamics import convertCartesianToKepler
@@ -21,7 +24,9 @@ from Modules.OrbitDesign import EarthRepeatOrbits
 
 
 TestCase = 2 # 1 - Coordinate conversions
-
+             # 2 - Earth repeat orbits
+             # 3 - Integ1 problem - Car motion - NI using Integrators module
+             
 ############################
 ####### Coordinate conversions ###
 ############################
@@ -92,4 +97,13 @@ elif TestCase == 2:
         e = 0
         i = np2.array([28,29,1])
         Result = EarthRepeatOrbits(jk,e,i,'Inclin',True,True)  
+        
+elif TestCase == 3:
+    
+    def CarProblem1D(S):
+        "Defining the state derivative function for the car motion proble from Integ1"
+        
+        # error handling
+        assert(S.size == 2),"Incorrect array size for the state variable passed to the STF."
+        
     

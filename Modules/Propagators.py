@@ -8,13 +8,10 @@ Date of creation: Thu May  7 06:47:10 2020
 Version: developed with version 3 of the laboratory script, Integ3.py
 
 Description:
-        1. 
-        2. 
-        3. 
-        4. 
-        5. 
-        6. 
-        7. Output validation - TBD [UPDATE THIS]
+        1.Defined the propagator class 
+        2.Propagators supported so far: Cowell
+        3.Central bodies supported so far: Earth
+        4.Definted the pointMassGravity function to compute state derivative with Cowell propagator  
 """
 ###########################################
 ### Definition: Propagator Class ##########   
@@ -45,7 +42,8 @@ class Propagator():
     def listAllpropagators():
         supportedPropagators = ["Cowell"]
         return supportedPropagators
-            
+    
+    # setting up the central body         
     def setCentralBody(self,CentralBN):
         self.centralBodyName = CentralBN 
         
@@ -72,7 +70,7 @@ class Propagator():
             self.__centralBodySet = True
         else:
             import warnings
-            warnings.warn('Name of the central body is not supported. Use listAllCentralBodies() class method to know all the celestial bodies supported as a central body.')    
+            warnings.warn('Name of the central body is not supported yet. Use listAllCentralBodies() class method to know all the celestial bodies supported as a central body.')    
             self.__CBmu = None
     
     # documenting the central bodies supported
@@ -81,9 +79,9 @@ class Propagator():
         supportedCentralbodies = ["Earth"]
         return supportedCentralbodies
 
-    ##########################################
+    ###########################################
     # Definition: Point mass gravity function #   
-    ##########################################
+    ###########################################
 
     def pointMassGravity(self,S):
         "Function to compute point mass gravity acceleration and derivate function value for a state of the S/C"
