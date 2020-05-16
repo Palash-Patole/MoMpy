@@ -109,7 +109,7 @@ V0 = 0 # [m/s]
 S0 = npMain.array([X0,V0]) # intial state
 a = 2 # [m/s^2]
 
-plotResults = 5 # 0 - no plotting
+plotResults = 0 # 0 - no plotting
                 # 1 - Only computed distance plot for the the Euler integrator  
                 # 2 - Double y-axis plot for the Euler integrator
                 # 3 - Double y-axis plot for the RK4 integrator
@@ -120,7 +120,7 @@ plotResults = 5 # 0 - no plotting
 AnaSol = Analytical(step,t0,te,X0,V0,a) # results validated
 
 # Solving the problem using Euler integrator
-step = 0.1
+step = 1
 EulerSol = Euler(step,t0,te,S0,a) # results validated at multiple step-sizes
 
 

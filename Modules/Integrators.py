@@ -11,6 +11,7 @@ Description:
         1. Definition of the base/superclass for numerical integrator
         2. Definition of the subclass - Euler integrator
         3. Definition of the subclass - RK4 integrator
+        4. 6 May: corrected on line 57, 91, 128 (from "stateSize" to "stateSize+1")
 
 """
 #################################################
@@ -53,7 +54,7 @@ class numericalIntegrator:
         
         # Initialization 
         Sol[0,0] = self.time[0] # saving intial epoch
-        for index in range(1,self.stateSize):
+        for index in range(1,self.stateSize+1):
             Sol[0,index] = self.state0[index-1] # saving initial state 
         
         return Sol
@@ -84,9 +85,10 @@ class EulerIntegrator(numericalIntegrator):
         
             # calling the state derivative function
             S_dot = self._sdf(S)
-            
+                        
             S = S + S_dot * self.tStep #computing state at this epoch, using Euler formulation
-            for index in range(1,self.stateSize):
+            
+            for index in range(1,self.stateSize+1):
                 Sol[count,index] = S[index-1] # saving current state   
         
         return Sol
@@ -123,7 +125,7 @@ class RK4Integrator(numericalIntegrator):
         
             phi = (K1 + 2*K2 + 2*K3 + K4)/6
             S = S + phi * self.tStep
-            for index in range(1,self.stateSize):
+            for index in range(1,self.stateSize+1):
                 Sol[count,index] = S[index-1] # saving current state
         
         return Sol

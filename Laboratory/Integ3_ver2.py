@@ -13,6 +13,8 @@ Description:
         3. Definition of the point mass gravity function taken from ver1
         4. Defined the RK4 integrator subclass
         5. Output validation - through step size variation part of the assignment - validated
+        6. 16 May: corrected on line 71, 104, 141 (from "stateSize" to "stateSize+1")
+        7. Repeated 5. after executing 6.
 """
 ###########################################
 #### Importing the required modules  ######   
@@ -67,7 +69,7 @@ class numericalIntegrator:
         
         # Initialization 
         Sol[0,0] = self.time[0] # saving intial epoch
-        for index in range(1,self.stateSize):
+        for index in range(1,self.stateSize+1):
             Sol[0,index] = self.state0[index-1] # saving initial state 
         
         return Sol
@@ -100,7 +102,7 @@ class EulerIntegrator(numericalIntegrator):
             S_dot = self._sdf(S)
             
             S = S + S_dot * self.tStep #computing state at this epoch, using Euler formulation
-            for index in range(1,self.stateSize):
+            for index in range(1,self.stateSize+1):
                 Sol[count,index] = S[index-1] # saving current state   
         
         return Sol
@@ -137,7 +139,7 @@ class RK4Integrator(numericalIntegrator):
         
             phi = (K1 + 2*K2 + 2*K3 + K4)/6
             S = S + phi * step
-            for index in range(1,self.stateSize):
+            for index in range(1,self.stateSize+1):
                 Sol[count,index] = S[index-1] # saving current state
         
         return Sol
