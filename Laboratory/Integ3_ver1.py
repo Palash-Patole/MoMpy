@@ -16,6 +16,8 @@ Description:
         6. Orbit visualizations for results obtained with both integrators
         7. Output validation complete through qualityCheck matrix - integrators validated at different step sizes
         8. Output validation is also performed through visual comparision of accuracy vs number of function evaluations plot
+        9. 15 May: corrected on line 53, 67, 90, 117 (from "stateSize" to "stateSize+1")
+        10. Repeated 7 and 8 after executing 9
 """
 ###########################################
 #### Importing the required modules  ######   
@@ -49,7 +51,7 @@ def Euler(step,t0,te,S):
     
     # Initialization 
     EulerSol[0,0] = time[0] # saving intial epoch
-    for index in range(1,stateSize):
+    for index in range(1,stateSize+1):
         EulerSol[0,index] = S[index-1] # saving initial state 
          
     # Using Euler integration formulation at each step
@@ -63,7 +65,7 @@ def Euler(step,t0,te,S):
         S_dot = pointMassGravity(S)
             
         S = S + S_dot * step #computing state at this epoch, using Euler formulation
-        for index in range(1,stateSize):
+        for index in range(1,stateSize+1):
             EulerSol[count,index] = S[index-1] # saving current state         
         
     return EulerSol
@@ -86,7 +88,7 @@ def RK4(step,t0,te,S):
 
     # Initialization 
     RK4Sol[0,0] = time[0] # saving intial epoch
-    for index in range(1,stateSize):
+    for index in range(1,stateSize+1):
         RK4Sol[0,index] = S[index-1] # saving initial state 
     
     # Using RK4 integration formulation at each step
@@ -113,7 +115,7 @@ def RK4(step,t0,te,S):
         
         phi = (K1 + 2*K2 + 2*K3 + K4)/6
         S = S + phi * step
-        for index in range(1,stateSize):
+        for index in range(1,stateSize+1):
             RK4Sol[count,index] = S[index-1] # saving current state
     
     return RK4Sol
@@ -154,7 +156,7 @@ a = 42164173 # Semi-major axis for a GEO S/C [m]
 
 KeplerC = npMain.array([a,0,0,0,0,0]) # initial state of GEO satellite, Kepler elements
 
-visualize = 0 # 0 - no visualizations
+visualize = 1 # 0 - no visualizations
               # 1 - plot the S/C orbit over a month, XY plane, Euler integrator
               # 2 - plot the S/C orbit over a month, XY plane, RK4 integrator
 
