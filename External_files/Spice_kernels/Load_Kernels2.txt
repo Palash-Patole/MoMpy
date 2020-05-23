@@ -1,7 +1,7 @@
 \begindata
 
   KERNELS_TO_LOAD = ('Spice_kernels/gm_de431.tpc',
-                     'de432s.bsp')
+                     'Spice_kernels/de432s.bsp')
 
 \begintext
 

@@ -39,12 +39,18 @@ def EarthRepeatOrbits(jk,e,Variable,VarType,isHighFidelity=False,printStatus=Fal
         return Result
         
     # Extracting the parameters
-    spice.furnsh("./External_files/Spice_kernels/kernel_load.txt")
-    muE = spice.bodvrd('Earth','GM',1)
-    mu = muE[1][0] # [km3/s2] for earth 
-    J2 = 1082.63E-6 #J2 for earth
-    RE = spice.bodvrd('EARTH','RADII',3)
-    Re= RE[1][0] # [km], Average radius of Earth 
+    try:
+        spice.furnsh("./External_files/Spice_kernels/Load_Kernels.txt")
+        muE = spice.bodvrd('Earth','GM',1)
+        mu = muE[1][0] # [km3/s2] for earth     
+        RE = spice.bodvrd('EARTH','RADII',3)
+        Re= RE[1][0] # [km], Average radius of Earth
+        spice.kclear
+    except:
+        mu = 398600.435436095925979316234588623046875 # manually entering in case the import fails
+        Re = 6378.136599999999816645868122577667236328125 # manually entering in case the import fails
+        
+    J2 = 1082.63E-6 #J2 for earth    
     De = 86164.1004 # [s], Sidereal day
     k2 = 0.75 * J2 * math.sqrt(mu)* Re*Re
     r2d = 1/spice.rpd() # Radian to degree conversion
