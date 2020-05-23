@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Code by: Palash Patole
-MoMpy Project: Laboratory
+MoMpy Project: (base folder)
 Date of creation: Fri Nov  8 20:57:12 2019
 
 version: Base
@@ -13,7 +13,7 @@ Description:
     4. 
 """
 
-TestCase = 3 # 1 - Coordinate conversions
+TestCase = 2 # 1 - Coordinate conversions
              # 2 - Earth repeat orbits
              # 3 - Integ1 problem - Car motion - NI using Integrators module
              
@@ -66,6 +66,7 @@ elif TestCase == 2:
     # import the required modules
     import numpy as np2
     from Modules.OrbitDesign import EarthRepeatOrbits
+    import pickle # to export the variable data
     
     Run = 3 # 1 - Approach 1 with i as unknown
             # 2 - Approach 2 with i as unknown 
@@ -76,14 +77,24 @@ elif TestCase == 2:
         jk = np2.matrix('39, 3; 40, 3; 41, 3; 42, 3; 43,3; 44, 3 ; 45,3; 46, 3; 47,3 ; 48, 3')
         e = 0
         a = np2.array([200,1200,1])
-        Result = EarthRepeatOrbits(jk,e,a,'Alti',False,True)   
+        Result = EarthRepeatOrbits(jk,e,a,'Alti',False,True) 
+        
+        # Saving the results for post-processing
+        f = open('Output/EarthRepeats_data1.pckl', 'wb')
+        pickle.dump(Result, f)
+        f.close()
         
     # Approach 2, i as unknown 
     elif Run == 2:
         jk = np2.matrix('39, 3; 40, 3; 41, 3; 42, 3; 43,3; 44, 3 ; 45,3; 46, 3; 47,3 ; 48, 3')
         e = 0
         a = np2.array([200,1200,1])
-        Result = EarthRepeatOrbits(jk,e,a,'Alti',True,True)   
+        Result = EarthRepeatOrbits(jk,e,a,'Alti',True,True) 
+        
+        # Saving the results for post-processing
+        f = open('Output/EarthRepeats_data2.pckl', 'wb')
+        pickle.dump(Result, f)
+        f.close()
         
     # Approach 2 with altitude as unknown
     elif Run == 3:
@@ -91,6 +102,11 @@ elif TestCase == 2:
         e = 0
         i = np2.array([28,29,1])
         Result = EarthRepeatOrbits(jk,e,i,'Inclin',True,True)  
+        
+        # Saving the results for post-processing
+        f = open('Output/EarthRepeats_data3.pckl', 'wb')
+        pickle.dump(Result, f)
+        f.close()
         
 elif TestCase == 3:
     
