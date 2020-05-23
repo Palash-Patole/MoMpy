@@ -28,10 +28,9 @@ def EarthRepeatOrbits(jk,e,Variable,VarType,isHighFidelity=False,printStatus=Fal
     import spiceypy as spice
     import math
     import numpy as np
-    import sys
     
     Result = 0
-    Nsolutions = 0
+    Nsolutions = 0  
       
     # Error handling
     jkSize = jk.shape
