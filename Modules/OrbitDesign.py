@@ -42,7 +42,7 @@ def EarthRepeatOrbits(jk,e,Variable,VarType,isHighFidelity=False,printStatus=Fal
     try:
         spice.furnsh("./External_files/Spice_kernels/Load_Kernels.txt")
         muE = spice.bodvrd('Earth','GM',1)
-        mu = muE[1][0] # [km3/s2] for earth     
+        mu = muE[1][0] # [km3/s2], graviational parameter for earth     
         RE = spice.bodvrd('EARTH','RADII',3)
         Re= RE[1][0] # [km], Average radius of Earth
         spice.kclear
