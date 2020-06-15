@@ -11,7 +11,7 @@ Description:
         1. Module to contain useful astrodynamic problems
         2. Circular LEO to GEO two-burn transfer problem - Problem type 1
         3. Circular LEO to another circular-equatorial orbit at higher altitude - Problem type 2
-        4. 
+        4. Two burn transfer problem verfied by checking the function and its derivative value plot. Comparing the known results for minima.
         5. 
         6. 
         7. 
@@ -23,6 +23,7 @@ Description:
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+
 
 ###########################################
 ## Definition: Two-burn trasfer problem ###   
@@ -91,7 +92,7 @@ class TransferOrbits:
             self.__Va = math.sqrt(mu * (1-e)/(a * (1+e))) # Apoapsis velocity in the GTO [km/s] 
             self.__Vp = math.sqrt(mu * (1+e)/(a * (1-e))) # Periapsis velocity in the GTO [km/s]
         
-            self.__paraSet = True # Parameters are not completely set and other methods can be used
+            self.__paraSet = True # Parameters are now completely set and other methods can be used
         elif self.problemType == 2:
             # Extraction
             self.__r1LEO = Re + self.__Paraset[0] # Semi-major axis of the circular LEO [km]
@@ -104,7 +105,7 @@ class TransferOrbits:
             self.__VC1 = math.sqrt(mu/self.__r1LEO) # Velocity of the circular LEO [km/s]
             self.__VC2 = math.sqrt(mu/self.__r2HEO) # Velocity of the circular final orbit [km/s]            
             
-            self.__paraSet = True # Parameters are not completely set and other methods can be used
+            self.__paraSet = True # Parameters are now completely set and other methods can be used
         else:
             print('Problem type is not supported.')
         
@@ -147,7 +148,8 @@ class TransferOrbits:
             # Second Delta-V required, at the apoapsis of the first leg of the intermediate ellitptical transfer orbit, to put S/C on the second leg, an inclination change is achieved
             DeltaVs[1] = VCa * math.sqrt( (1-et1) + (1-et2) -2 * math.sqrt((1-et1)*(1-et2)) * math.cos(i2) )
             # Third Delta-V required, at the periapsis of the second leg of the intermediate ellitptical transfer orbit, to put S/C in the final circular orbit, an inclination change is achieved
-            DeltaVs[2] = self.__VC2 * (math.sqrt(1+et2)-1)
+#            DeltaVs[2] = self.__VC2 * (math.sqrt(1+et2)-1) #Original formula in wakker when there is no inclination change at this maneuver
+            DeltaVs[2] = self.__VC2 * math.sqrt( (1+et2) + 1 - 2 *math.sqrt(1+et2) * math.cos(i3))
         else:
             print('Problem type not supported.')
             
@@ -182,19 +184,21 @@ class TransferOrbits:
 ######## Local testing ###############
 ######################################
         
-problem = 2 # Problem to be solved
+problem = 1 # Problem to be solved
             # 0 - No local testing
             # 1 - two-burn transfer problem, check inputs below
             # 2 - three burn transfer problem 
+visualize = False # When locally tested, visualizes the validation results            
 
 if problem==1:
 # Setting up the two-burn transfer problem
     object1 = TransferOrbits(1)
     para = np.array([185,28.5])
     object1.setProblemParameters(para)
+    step = 0.001
     
     # Storage
-    i1Data = np.arange(0,28.6,0.1)
+    i1Data = np.arange(0,para[1]+0.1,step)
     Results = np.zeros(i1Data.size*5)
     Results.shape = [i1Data.size,5]
     
@@ -206,11 +210,25 @@ if problem==1:
         Results[rowIndex,1] = DeltaVs[0]+DeltaVs[1]
         Results[rowIndex,2] = DeltaVs[0]
         Results[rowIndex,3] = DeltaVs[1]
-        Results[rowIndex,3] = object1.computeDerivative(i1)
+        Results[rowIndex,4] = object1.computeDerivative(i1)
         rowIndex +=1
-
+    
+    # finding row index where the functions's value is minimum    
+    FminColumn = np.where(Results[:,1]==np.amin(Results[:,1])) 
+    FminColumn = FminColumn[0][0]
+    # finding index value where function's derivative has a zero value
+    dFminColumn = np.where(abs(Results[:,4])==np.amin(abs(Results[:,4])))
+    dFminColumn == dFminColumn[0][0]
+    
+    # Checking where is minima is found and where it is expected based on the derivative function value:
+    if (FminColumn==dFminColumn):
+        print("The function has minimum value where the derivative function has zero/closest to zero value.")
+    
+    print('\n\nThe minimum function is '+ str(Results[FminColumn,1]) + ' and occurs at '+ '\u0394i1 :'+ str(Results[FminColumn,0]) +'.')
+    print('The derivative function has a value closest to zero: '+str(Results[dFminColumn,4])+' and it occurs at '+ '\u0394i1 :'+ str(Results[dFminColumn,0]) +'.')
+    
 elif problem==2:    
-    # Generating first plot of Figure 13.9 (pp324), from Wakker Astrodynamics notes
+    # For generating first plot of Figure 13.9 (pp324), from Wakker Astrodynamics notes
     object2 = TransferOrbits(2)
     
     mvalues = np.array([2,5,10,30]) # m-values (ra_transfer/rLEO) to be tested
@@ -243,7 +261,7 @@ elif problem==2:
                 object2.setProblemParameters(para2)
                 
                 # Computing for the rHEO distance
-                fraction =  (limitingDistance-(hHEO+RE))/ ra
+                fraction =  ra / (limitingDistance-(hHEO+RE))
                 variables = np.array([inclinLEO,fraction])
                 DeltaVs2 = object2.computeDeltaV(variables)
 
@@ -267,26 +285,76 @@ elif problem==2:
     
 ######################################
 ######## Visualization ###############
-######################################    
-
-if problem==1:    
-    # simple one-axis plot
-    plt.plot(Results[:,0],Results[:,1])
-    plt.grid(True)
-    plt.title('Two-burn transfer from LEO to GEO')
-    plt.xlabel('First-maneuver inclination change (\Delta i_1) [deg]')
-
-if problem==2:
-    # plot for first m value
-    plt.plot(mResults[0:int(solTracker[0,1]),0],mResults[0:int(solTracker[0,1]),2],'o-',label='Using MoMPy class, m=2')
-    plt.plot(mResults[int(solTracker[0,1]):int(solTracker[1,1]),0],mResults[int(solTracker[0,1]):int(solTracker[1,1]),2],'o-',label='Using MoMPy class, m=5')
-    plt.plot(mResults[int(solTracker[1,1]):int(solTracker[2,1]),0],mResults[int(solTracker[1,1]):int(solTracker[2,1]),2],'o-',label='Using MoMPy class, m=10')
-    plt.plot(mResults[int(solTracker[2,1]):int(solTracker[3,1]),0],mResults[int(solTracker[2,1]):int(solTracker[3,1]),2],'o-',label='Using MoMPy class, m=30')
-
-#    plt.plot(mResults[0:int(solTracker[0,1]),0],DVfromformula[0:int(solTracker[0,1]),5],'*-',label='Using formulae from Wakker,m=2')
-    plt.xlabel('n')
-    plt.ylabel('Total DeltaV/Vc1')
-    plt.grid(True)    
-    plt.legend()
+######################################   
     
-#    print(mResults[int(solTracker[0,1]):int(solTracker[1,1]),2])
+
+
+if (visualize==True):    
+    if problem==1:          
+        # Double axis plot of function and its derivative value
+        fig, ax1 = plt.subplots()
+        
+        # First axis
+        color  = 'tab:blue'
+        ax1.set_xlabel('First-maneuver inclination change '+r'$(\Delta i_1)$'+' [deg]')
+        ax1.set_ylabel('Total '+r'$\Delta V$' + ' [m/s]')
+        ax1.plot(Results[:,0],Results[:,1],color=color)
+        ax1.tick_params(axis='y',labelcolor=color)
+        ax1.set_xlim(left=i1Data[0])
+        ax1.set_xlim(right=i1Data[-1])
+        plt.axvline(x=Results[FminColumn,0],color='k',linestyle='--',label="Function has minimum value here")
+        plt.axvline(x=Results[dFminColumn,0],color='g',linestyle='-.',label="Derivative has zero value here") 
+        plt.legend()
+            
+        ax2 = ax1.twinx() # second y-axis
+        color = 'tab:red'
+        ax2.set_ylabel('Derivative of total '+ r'$\Delta V$'+ ' function')
+        ax2.plot(Results[:,0],Results[:,4],color=color)
+        
+        ax2.tick_params(axis='y',labelcolor=color)
+        
+        #common properties for the figure
+        fig.tight_layout()
+        plt.title('Two-burn trasfer problem: function and its derivative value')
+        plt.grid(True)
+        plt.show()
+        
+        
+    if problem==2:
+        fig = plt.figure()
+        fig.suptitle("Validation of results obtained with 'TransferOrbits' class for three-burn transfer problem", fontsize=16)
+        plt.subplot(221)
+        plt.plot(mResults[0:int(solTracker[0,1]),0],mResults[0:int(solTracker[0,1]),2],'o-',label='Using MoMPy class, m=2')
+        plt.plot(mResults[0:int(solTracker[0,1]),0],DVfromformula[0:int(solTracker[0,1]),5],'*-',label='Using formulae from Wakker,m=2')
+        plt.xlim(left = 0)
+        plt.xlabel('n')
+        plt.ylabel('Total '+ r'$\Delta V/ V_{c_1}$')
+        plt.grid(True)    
+        plt.legend()
+        
+        plt.subplot(222)
+        plt.plot(mResults[int(solTracker[0,1]):int(solTracker[1,1]),0],mResults[int(solTracker[0,1]):int(solTracker[1,1]),2],'o-',label='Using MoMPy class, m=5')    
+        plt.plot(mResults[int(solTracker[0,1]):int(solTracker[1,1]),0],DVfromformula[int(solTracker[0,1]):int(solTracker[1,1]),5],'*-',label='Using formulae from Wakker,m=5')
+        plt.xlim(left = 0)
+        plt.xlabel('n')
+        plt.ylabel('Total '+ r'$\Delta V/ V_{c_1}$')
+        plt.grid(True)    
+        plt.legend()
+        
+        plt.subplot(223)
+        plt.plot(mResults[int(solTracker[1,1]):int(solTracker[2,1]),0],mResults[int(solTracker[1,1]):int(solTracker[2,1]),2],'o-',label='Using MoMPy class, m=10')
+        plt.plot(mResults[int(solTracker[1,1]):int(solTracker[2,1]),0],DVfromformula[int(solTracker[1,1]):int(solTracker[2,1]),5],'*-',label='Using formulae from Wakker,m=10')
+        plt.xlim(left = 0)
+        plt.xlabel('n')
+        plt.ylabel('Total '+ r'$\Delta V/ V_{c_1}$')
+        plt.grid(True)    
+        plt.legend()
+        
+        plt.subplot(224)
+        plt.plot(mResults[int(solTracker[2,1]):int(solTracker[3,1]),0],mResults[int(solTracker[2,1]):int(solTracker[3,1]),2],'o-',label='Using MoMPy class, m=30')
+        plt.plot(mResults[int(solTracker[2,1]):int(solTracker[3,1]),0],DVfromformula[int(solTracker[2,1]):int(solTracker[3,1]),5],'*-',label='Using formulae from Wakker,m=30')
+        plt.xlim(left = 0)
+        plt.xlabel('n')
+        plt.ylabel('Total '+ r'$\Delta V/ V_{c_1}$')
+        plt.grid(True)    
+        plt.legend()
