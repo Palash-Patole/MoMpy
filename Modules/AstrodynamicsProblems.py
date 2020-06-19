@@ -31,6 +31,9 @@ import math
 class TransferOrbits:
     """ Defining two/three burn transfer problem from/to LEO to/from GEO/Higher altitude orbit """
     
+    ###########################
+    ###########################  
+    
     # constructor - assigning and checking the problem type
     def __init__(self,problemtype):
         self.problemType = problemtype 
@@ -44,6 +47,9 @@ class TransferOrbits:
             self.__requiredPara = 2
         elif self.problemType == 2:
             self.__requiredPara = 4
+    
+    ###########################
+    ###########################  
     
     # Setting up the parameters of the problem
     def setProblemParameters(self,ParaSet):   
@@ -108,6 +114,9 @@ class TransferOrbits:
             self.__paraSet = True # Parameters are now completely set and other methods can be used
         else:
             print('Problem type is not supported.')
+            
+    ###########################
+    ###########################        
         
     # Method to compute Delta Vs for the given set of user inputs
     def computeDeltaV(self,variablesSet):
@@ -134,6 +143,9 @@ class TransferOrbits:
             # storage for the results
             DeltaVs = np.zeros(3)
             
+            # Error-handling
+            assert(variablesSet[1]>0),"Check the second input variable - only positive values are accepted."
+            
             # computations
             i2 = variablesSet[0] * math.pi/180 # Inclination change at the second burn
             i3 = (self.__iLEO - variablesSet[0]) * math.pi/180 # Inclination change at the third burn
@@ -155,6 +167,9 @@ class TransferOrbits:
             
         return DeltaVs
     
+    ###########################
+    ###########################  
+    
     # Method to compute the required derivative value
     def computeDerivative(self,variablesSet):    
         # Error handling
@@ -162,6 +177,7 @@ class TransferOrbits:
         
         # importing the required modules
         import math
+        import numpy
         
         if self.problemType==1:
             # computations
@@ -172,7 +188,60 @@ class TransferOrbits:
             B = self.__VGEO * self.__Va * math.sin(i2) / math.sqrt(self.__VGEO**2 + self.__Va**2 - 2*self.__VGEO*self.__Va*math.cos(i2))
             
             return (A-B)
-    
+        elif self.problemType==2:
+            # Error-handling
+            assert(variablesSet[1]>0),"Check the second input variable - only positive values are accepted."
+            
+            # creating a storage variable
+            derivatives = numpy.zeros(6)
+            derivatives.shape = [3,2]
+            
+            #Extraction
+            i2 = variablesSet[0] * math.pi/180 # Inclination change at the second burn
+            i3 = (self.__iLEO - variablesSet[0]) * math.pi/180 # Inclination change at the third burn
+            f = variablesSet[1] # Fraction determining the apoapsis altitute of the intermediate transfer orbit
+            ra = f * (self.__raInterMedLimit-self.__r2HEO) # Apoapsis altitude of the intermediate transfer orbit [km]
+            
+            # Computations
+            et1 = (ra-self.__r1LEO)/(ra + self.__r1LEO) # Eccentricity of the first transfer leg 
+            et2 = (ra-self.__r2HEO)/(ra + self.__r2HEO) # Eccentricity of the second transfer leg
+            
+            # Defining essential functions
+            f1 = 1 + et1
+            f2 = 2 - f1
+            g2 = 1 - et2
+            g1 = 2 - g2
+            h1 = self.__VC1 * math.sqrt(self.__r1LEO/ra)
+            k1 = math.sqrt( f2 + g2 - 2 * math.sqrt(f2*g2) * math.cos(i2))
+            k2 = math.sqrt( g1 + 1 - 2 * math.sqrt(g1) * math.cos(i3))
+            
+            # Defining the derivatives of above essential functions
+            df1df = (2*self.__r1LEO*(self.__raInterMedLimit-self.__r2HEO))/(f*(self.__raInterMedLimit-self.__r2HEO)+self.__r1LEO)**2
+            dh1df = -0.5 * self.__VC1 * math.sqrt(self.__r1LEO/(self.__raInterMedLimit-self.__r2HEO)) * math.pow(f,-1.5)
+            df2df = -df1df
+            dg2df = (-2 *self.__r2HEO*(self.__raInterMedLimit-self.__r2HEO)) / (f*(self.__raInterMedLimit-self.__r2HEO)+self.__r2HEO)**2 
+            dg1df = - dg2df 
+            dk1df = 0.5 * math.pow(k1,-3) * (df2df * dg2df - math.cos(i2) * math.pow(f2*g2,-1.5) * (f2*dg2df+df2df*g2) )
+            
+            # Derivatives with respect to first inclination change- i2
+            # Derivative of DeltaV1
+            derivatives[0,0]= 0
+            # Derivative of DeltaV2
+            derivatives[1,0]= h1 * math.pow(k1,-3) * math.sqrt(f2*g2) * math.sin(i2)
+            # Derivative of DeltaV3
+            derivatives[2,0]= - self.__VC2 * math.pow(k2,-3) * math.sqrt(g1) * math.sin(i3)
+            
+            # Derivatives with respect to fraction f
+            # Derivative of DeltaV1
+            derivatives[0,1]= 0.5 * self.__VC1 * df1df/math.sqrt(f1) 
+            # Derivative of DeltaV2
+            derivatives[1,1]= dh1df * k1 + h1 * dk1df  
+            # Derivative of DeltaV3
+            derivatives[2,1]= 0.5 * self.__VC2 * math.pow(k2,-3) * ( g1 - math.pow(g1,-1.5) * dg1df * math.cos(i3) ) 
+            
+            return derivatives
+        
+        
     # Documenting problem types
     @staticmethod 
     def stateProblemTypes():
@@ -184,7 +253,7 @@ class TransferOrbits:
 ######## Local testing ###############
 ######################################
         
-problem = 1 # Problem to be solved
+problem = 2 # Problem to be solved
             # 0 - No local testing
             # 1 - two-burn transfer problem, check inputs below
             # 2 - three burn transfer problem 
@@ -260,10 +329,11 @@ elif problem==2:
                 para2 = np.array([altitudeLEO,inclinLEO,hHEO,limitingDistance-RE])
                 object2.setProblemParameters(para2)
                 
-                # Computing for the rHEO distance
+                # Computing for the rHEO distance and finding a solution
                 fraction =  ra / (limitingDistance-(hHEO+RE))
                 variables = np.array([inclinLEO,fraction])
                 DeltaVs2 = object2.computeDeltaV(variables)
+                Derivatives = object2.computeDerivative(variables)
 
                 # Storing the result
                 normaltotalDeltaV = np.sum(DeltaVs2)/Vc1 
