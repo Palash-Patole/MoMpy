@@ -12,7 +12,7 @@ Description:
         2. Circular LEO to GEO two-burn transfer problem - Problem type 1
         3. Circular LEO to another circular-equatorial orbit at higher altitude - Problem type 2
         4. Two burn transfer problem verfied by checking the function and its derivative value plot. Comparing the known results for minima.
-        5. 
+        5. Three burn transfer problem validated by generating plot with known formulas (from Wakker) in termns of m and n
         6. 
         7. 
 """
@@ -253,11 +253,14 @@ class TransferOrbits:
 ######## Local testing ###############
 ######################################
         
-problem = 2 # Problem to be solved
+problem = 3 # Problem to be solved
             # 0 - No local testing
             # 1 - two-burn transfer problem, check inputs below
-            # 2 - three burn transfer problem 
-visualize = False # When locally tested, visualizes the validation results            
+            # 2 - three burn transfer problem, validation using formulae in 
+            #     Wakker
+            # 3 - three burn transfer problem, checking function values w.r.t. derivatives
+            
+visualize = True # When locally tested, visualizes the validation results            
 
 if problem==1:
 # Setting up the two-burn transfer problem
@@ -324,7 +327,6 @@ elif problem==2:
                 hHEO = n*(RE+altitudeLEO)-RE # Altitude of the final orbit [km]
                 ra = m * (RE+altitudeLEO) # Apoapsis distance of the intermediate transfer orbit [km]
                 
-                
                 # Setting up the three-burn transfer problem
                 para2 = np.array([altitudeLEO,inclinLEO,hHEO,limitingDistance-RE])
                 object2.setProblemParameters(para2)
@@ -352,6 +354,30 @@ elif problem==2:
     
     mResults = np.delete(mResults,0,0) # Deleting the first empty row
     DVfromformula = np.delete(DVfromformula,0,0) # Deleting the first empty row
+    
+elif problem ==3:    
+    # For checking the values of derivatives when the fraction varies
+    
+    # Setting up the problem
+    object3 = TransferOrbits(2)
+    altitudeLEO = 185 # Altitude of the intial LEO orbit [km]
+    inclinLEO = 50 # Inclination of the LEO orbit [deg]
+    hHEO = 13400 # Altitude of the final circular equatorial orbit [km]
+    limitingDistance = 10 * hHEO # Limiting distance for the apoapsis altitude of intermediate transfer orbit [km] 
+    object3.setProblemParameters(np.array([altitudeLEO,inclinLEO,hHEO,limitingDistance]))
+    
+    # Checking the function and derivative value when only f changes
+    fvariationR = np.zeros(9) # Storage for the results
+    i2 = inclinLEO/3 # Setting random value for the first inclination change [degree]
+    for f in np.arange(0.1,1.0,0.01):
+        DeltaVs2 = object3.computeDeltaV(np.array([i2,f]))
+        Derivatives = object3.computeDerivative(np.array([i2,f]))
+        
+        fvariationR = np.vstack((fvariationR,np.array([f, DeltaVs2[0], DeltaVs2[1], DeltaVs2[2], np.sum(DeltaVs2), Derivatives[0,1], Derivatives[1,1], Derivatives[2,1], np.sum(Derivatives) ])))
+        
+       
+    fvariationR = np.delete(fvariationR,0,0) # Deleting the first empty row
+        
     
 ######################################
 ######## Visualization ###############
@@ -428,3 +454,22 @@ if (visualize==True):
         plt.ylabel('Total '+ r'$\Delta V/ V_{c_1}$')
         plt.grid(True)    
         plt.legend()
+        
+    elif problem==3:
+        fig, ax1 = plt.subplots()
+
+        ax2 = ax1.twinx()
+        ax1.plot(fvariationR[:,0], fvariationR[:,4], 'b-',label="Function value")
+        ax2.plot(fvariationR[:,0], fvariationR[:,8], 'k-',label="Value of the derivative")
+#        plt.legend()
+        
+        ax1.set_xlabel('Value of fraction (x)')
+        ax1.set_ylabel('f(x)', color='b')
+        ax2.set_ylabel('df(x)/dx', color='k')
+
+        ax1.tick_params(axis='y',labelcolor='b')
+        ax2.tick_params(axis='y',labelcolor='k')
+        
+        plt.grid(True)
+        plt.show()
+        
