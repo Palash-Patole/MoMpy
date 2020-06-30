@@ -252,7 +252,7 @@ class TransferOrbits:
 ######## Local testing ###############
 ######################################
         
-problem = 3 # Problem to be solved
+problem = 1 # Problem to be solved
             # 0 - No local testing
             # 1 - two-burn transfer problem, check inputs below
             # 2 - three burn transfer problem, validation using formulae in 
