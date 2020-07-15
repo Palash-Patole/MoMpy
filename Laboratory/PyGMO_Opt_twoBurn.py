@@ -8,8 +8,8 @@ Date of creation: Tue Jun 30 10:24:25 2020
 Version: Base 
 
 Description:
-        1. 
-        2. 
+        1. Optimization of the two-burn transfer problem from AstrodynamicsProblems/TransferOrbits
+        2. Validation against the optimum solution found using grid search in AstrodynamicsProblems_ver0.py, problem = 1 [Local testing]
         3. 
         4. 
         5. 
@@ -19,10 +19,12 @@ Description:
 ###########################################
 #### Importing the required modules  ######   
 ###########################################
-
+import sys
+sys.path.append('../')
 import pygmo as pg
 from Modules.AstrodynamicsProblems import TransferOrbits
 import numpy as np
+
 
 ###########################################
 ## Definition: PyGMO problem ##############   
@@ -54,24 +56,44 @@ class pagmo_TwoburnTransfer:
 
 # Parameters definition
 para = np.array([185,28.5])
+refSol = 4.272327966969703
+refX = 2.165
 
 # Optimization parameters
 nGen = 20
 
+# Alorithms of interest
+Algos = {1:'Differential evolution',2:'Artifical Bee Colony'}
 
-visualize = 2 # 0 - no visualizations
-              # 1 - [UPDATE THIS]
+visualize = False # TBC
               
 ######################################
 ######## Computations ################
 ######################################
-problem = pg.problem(pagmo_TwoburnTransfer(para))
-#print(problem)              
+# Creating a storage variable
+Results = np.zeros((len(Algos),6))              
 
-algo = pg.algorithm(pg.bee_colony(nGen, limit = 20))
-pop = pg.population(problem,10)
-pop = algo.evolve(pop)
-print(pop.champion_f)               
+# Setting the problem
+problem = pg.problem(pagmo_TwoburnTransfer(para))
+             
+for i in range(1,len(Algos)+1):
+    print('\n\n\n')
+    print("******************************************************************")
+    print('The selected algorithm is: ', Algos[i])
+    print("******************************************************************")
+    if i==1:
+        algo = pg.algorithm(pg.de(nGen))
+    elif i==2:
+        algo = pg.algorithm(pg.bee_colony(nGen, limit = 20))
+    elif i==3:
+        pass
+    
+    pop = pg.population(problem,10)
+    pop = algo.evolve(pop)
+
+    print('The optimum fitness value is {:0.12f} while the known/reference solution is {:0.12f}.'.format(pop.champion_f[0],refSol))               
+    print('The optimum fitness occurs at {:0.12f} while the known/reference value is {:0.12f}.'.format(pop.champion_x[0],refX))               
+
 
 
 #######################################
