@@ -1,0 +1,7 @@
+name: MoMpy_env
+channels:
+  - defaults	
+dependencies:
+  - numpy
+
+prefix: C:\Anaconda3\envs\MoMpy_env
