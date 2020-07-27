@@ -5,9 +5,9 @@ channels:
 dependencies:
   - numpy
   - spiceypy
-  - pygmo	
+  - pygmo
   - spyder
-  - notebook	
+  - notebook
 	
 
 prefix: C:\Anaconda3\envs\MoMpy_env
