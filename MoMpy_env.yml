@@ -1,7 +1,13 @@
 name: MoMpy_env
 channels:
-  - defaults	
+  - defaults
+  - conda-forge
 dependencies:
   - numpy
+  - spiceypy
+  - pygmo	
+  - spyder
+  - notebook	
+	
 
 prefix: C:\Anaconda3\envs\MoMpy_env
