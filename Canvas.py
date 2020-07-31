@@ -13,7 +13,7 @@ Description:
     4. 
 """
 
-TestCase = 2 # 1 - Coordinate conversions
+TestCase = 1 # 1 - Coordinate conversions
              # 2 - Earth repeat orbits
              # 3 - Integ1 problem - Car motion - NI using Integrators module
              
@@ -38,7 +38,7 @@ if TestCase == 1:
     # Extracting mu from SPICE kernels
     print (spice.tkvrsn('TOOLKIT'))
     
-    spice.furnsh("./External_files/Spice_kernels/kernel_load.txt")
+    spice.furnsh("./External_files/Spice_kernels/Load_kernels.txt")
     
     muE = spice.bodvrd( 'EARTH', 'GM', 1 )
     
