@@ -8,5 +8,5 @@ dependencies:
   - pygmo
   - spyder
   - notebook
-
+  - matplotlib=3.3.0
 prefix: C:\Anaconda3\envs\MoMpy_env
